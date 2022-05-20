@@ -8,8 +8,8 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>  
   <script type="text/javascript">
     function Submit() {
-      var from_addr = 'dag hammarskjölds väg 1c';
-      var to_addr = document.getElementById('taddr').value;
+      var from_addr = document.getElementById('taddr').value;
+      var to_addr = 'dag hammarskjölds väg 1c';
       var data = { "faddr": from_addr,
                    "taddr": to_addr,
                  }
@@ -18,25 +18,30 @@
         if (this.readyState == 4 && this.status == 200) {
           try{
             var resp = this.responseText;
-            alert(resp);
+            if (resp.charAt(0) == 'd'){
+              window.location = resp
+              }
+            else {alert(resp)}
           }
           catch(err){
-            alert(this.responseText);
+            alert(this.responseText)
           }
         }
       };
-      xhttp.open("POST", "http://127.0.0.1:5002/planner", true);
+      xhttp.open("POST", "http://127.0.0.1:5000/planner", true);
       xhttp.send(JSON.stringify(data));
     }
   </script>
   <script type="text/javascript">
     function LoadDrone(droneID, x, y, status, eta) {
-      var time_left = document.getElementById("etaid").innerHTML = eta;
       var doc = document.getElementById("map");
       $( doc ).ready(function() {
       var doc_svg = doc.getSVGDocument();
       var svg = doc_svg.getElementById("map-svg");
       var circleNode = svg.getElementById(droneID);
+      if (eta != null){
+        document.getElementById("etaid").innerHTML = "Current ETA: " + eta;
+        }
       var color = 'red';
       if (status == 'idle'){
         color = 'green'
@@ -61,11 +66,11 @@
 </head>
 
 <body>
-  <p>Current ETA: <span id="etaid"></span></p>
+  <p id="etaid">Current ETA: </p>
   <div id="txt"></div>
   <form action="javascript:Submit()">
     
-    <label for="lname">To address:</label><br>
+    <label for="lname">Delivery Adress:</label><br>
     <input type="text" id="taddr" name="taddr"><br><br>
     <input type="submit" value="Search addresses">
   </form>

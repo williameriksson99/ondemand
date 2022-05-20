@@ -1,5 +1,5 @@
 from cmath import pi
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, redirect, url_for
 from flask.globals import current_app 
 from geopy.geocoders import Nominatim
 from flask_cors import CORS
@@ -24,6 +24,13 @@ def send_request(drone_url, coords):
     with requests.Session() as session:
         resp = session.post(drone_url, json=coords)
         
+def time_left(dist):
+    sec = dist/14
+    minutes = int(sec/60)
+    rest_sec = int(sec % 60)
+    message = (str(minutes) + ' Minutes, ' + str(rest_sec) + ' Seconds')
+    return message
+        
 def findDrone():
     if redis_server.get('Status12') == 'idle':
         return 12
@@ -31,8 +38,20 @@ def findDrone():
         return 13
     else:
         return -1
+    
+def dist_min():
+    dist12 = float(redis_server.get('Dist12'))
+    dist13 = 100000#float(redis_server.get('Dist13'))
+    if (dist12 > dist13):
+        return dist13
+    else:
+        return dist12
+    
+@app.route('/drone12', methods=['GET'])
+def drone12():
+    return render_template('drone12.html')
 
-@app.route('/planner', methods=['POST'])
+@app.route('/planner', methods=['POST', 'GET'])
 def route_planner():
     Addresses =  json.loads(request.data.decode())
     FromAddress = Addresses['faddr']
@@ -63,26 +82,15 @@ def route_planner():
                 with requests.session() as session:
                     resp = session.post(DRONE_URL, json=coords)
                     print(resp.text)
-                return message
+                return redirect(url_for('drone12'))
             except Exception as e:
                 print(e)
-                return "Could not connect to the drone, please try again"
+                return redirect(url_for('drone12')) #"Could not connect to the drone, please try again"
         
-        elif findDrone() == 13:
-            DRONE_URL = 'http://' + redis_server.get('DroneIP13') + ':5000'
-            message = 'Got address and sent request to the drone'
-            
-            try:
-                with requests.session() as session:
-                    resp = session.post(DRONE_URL, json=coords)
-                    print(resp.text)
-                return message
-            except Exception as e:
-                print(e)
-                return "Could not connect to the drone, please try again"
+        
        
         else:
-            message = 'No available drone, try later'
+            message = 'No available drone right now, Next available drone: ' + str(time_left(dist_min())) 
         
        
         # else:
@@ -90,7 +98,7 @@ def route_planner():
         #DRONE_URL = 'http://' + DRONE_IP+':5000'
             # 3. Send coords to the URL of available drone
         #message = 'Got address and sent request to the drone'
-    return message
+    return redirect(url_for('drone12'))
         # ======================================================================
 
 

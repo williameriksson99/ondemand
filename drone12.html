@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<title>test in lund</title>
+	<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>  
+
+</head>
+
+
+<body>
+	
+	<p id="etaid">Current ETA: </p>
+	<script>
+    var set_delay = 50,
+    callout = function () {
+    $.ajax({
+      url: 'http://0.0.0.0:5000/get_drones'
+    })
+    .done(function (server_response) {
+      var avalaible_drones = Object.keys(server_response)
+        var eta = server_response['12'].time
+        
+        document.getElementById("etaid").innerHTML = "Current ETA: " + eta;
+        
+		
+    })
+    .always(function (server_response) {
+        setTimeout(callout, set_delay);
+    });
+    };
+    callout();    
+  </script>
+	
+</body>
+</html>
